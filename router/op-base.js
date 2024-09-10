@@ -31,7 +31,7 @@ router.post('/add', (req, res) => {
       })
     }
     else
-      res.send({ status: successCode, message: '插入成功' })
+      res.send({ status: successCode, message: '插入成功', data: { id: data.insertId } })
   })
 })
 
@@ -46,15 +46,19 @@ router.post('/delete', (req, res) => {
       })
     }
     else
-      res.send({ status: successCode, message: '删除成功' })
+      res.send({ status: successCode, message: '删除成功', data: { id: _ids } })
   })
 })
 
 router.post('/update', (req, res) => {
   const params = req.body
-  const [_tabname, _data, _id, _nval, _ret] = [params.tabname, params.data, params.id, params.nval, params.ret]
-  const _updExp = Object.entries(_nval).map(([key, value]) => `${key} = ?`).join(', ');
-  const _values = [...Object.values(_nval)]
+  const [_tabname, _data, _id, _ret] = [params.tabname, params.data, params.id, params.ret]
+  Object.keys(_data).forEach(function (key) {
+    if (typeof _data[key] === 'object')
+      _data[key] = JSON.stringify(_data[key])
+  })
+  const _updExp = Object.entries(_data).map(([key, value]) => `${key} = ?`).join(', ');
+  const _values = [...Object.values(_data)]
   coon.query(`update ${_tabname} set ${_updExp} where id = ${_id}`, _values, async (err, data) => {
     if (err) res.send({ status: failCode, message: '更新失败', err })
     if (_ret === 1) {
@@ -63,7 +67,7 @@ router.post('/update', (req, res) => {
       })
     }
     else
-      res.send({ status: successCode, message: '插入成功' })
+      res.send({ status: successCode, message: '更新成功', data: { id: _id } })
   })
 })
 
